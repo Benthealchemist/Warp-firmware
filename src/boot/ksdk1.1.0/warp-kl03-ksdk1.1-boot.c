@@ -48,10 +48,10 @@
 #include "fsl_mcglite_hal.h"
 #include "fsl_port_hal.h"
 
+
 #include "gpio_pins.h"
 #include "SEGGER_RTT.h"
 #include "warp.h"
-
 #include "devBMX055.h"
 #include "devADXL362.h"
 #include "devMMA8451Q.h"
@@ -68,6 +68,8 @@
 #include "devPAN1326.h"
 #include "devAS7262.h"
 #include "devAS7263.h"
+#include "devSSD1331.h"
+
 
 
 #define					kWarpConstantStringI2cFailure		"\rI2C failed, reg 0x%02x, code %d\n"
@@ -93,7 +95,8 @@ volatile WarpI2CDeviceState		deviceAMG8834State;
 volatile WarpUARTDeviceState		devicePAN1326BState;
 volatile WarpUARTDeviceState		devicePAN1323ETUState;
 volatile WarpI2CDeviceState		deviceAS7262State;
-volatile WarpI2CDeviceState		deviceAS7263State;
+volatile WarpI2CDeviceState            deviceAS7263State;
+volatile WarpSPIDeviceState		deviceSSD1331State;
 
 /*
  *	TODO: move this and possibly others into a global structure
@@ -113,7 +116,7 @@ volatile uint32_t			gWarpSleeptimeSeconds	= 0;
 volatile WarpModeMask			gWarpMode		= kWarpModeDisableAdcOnSleep;
 
 
-
+/*do we need to add the SSD1331 here to enable it?*/
 void					sleepUntilReset(void);
 void					lowPowerPinStates(void);
 void					disableTPS82740A(void);
@@ -254,20 +257,26 @@ sleepUntilReset(void)
 }
 
 
-
+/* do this values need to be changes to match the pins?*/
 void
 enableSPIpins(void)
 {
-	CLOCK_SYS_EnableSpiClock(0);
+	CLOCK_SYS_EnableSpiClock(9);
 
-	/*	Warp KL03_SPI_MISO	--> PTA6	(ALT3)		*/
-	PORT_HAL_SetMuxMode(PORTA_BASE, 6, kPortMuxAlt3);
+	/*	Warp KL03_SPI_MISO	--> PTA6	(ALT3) change these to match the .c file?		*/
+	// PORT_HAL_SetMuxMode(PORTA_BASE, 6, kPortMuxAlt3);
 
 	/*	Warp KL03_SPI_MOSI	--> PTA7	(ALT3)		*/
-	PORT_HAL_SetMuxMode(PORTA_BASE, 7, kPortMuxAlt3);
+	PORT_HAL_SetMuxMode(PORTA_BASE, 8, kPortMuxAlt3);
 
 	/*	Warp KL03_SPI_SCK	--> PTB0	(ALT3)		*/
-	PORT_HAL_SetMuxMode(PORTB_BASE, 0, kPortMuxAlt3);
+	PORT_HAL_SetMuxMode(PORTA_BASE, 9, kPortMuxAlt3);
+
+	PORT_HAL_SetMuxMode(PORTB_BASE, 13, kPortMuxAlt3);
+
+	PORT_HAL_SetMuxMode(PORTA_BASE, 12, kPortMuxAlt3);
+
+	PORT_HAL_SetMuxMode(PORTA_BASE, 2, kPortMuxAlt3);
 
 
 	/*
@@ -1066,6 +1075,7 @@ main(void)
 
 
 
+
 	/*
 	 *	Power down all sensors:
 	 */
@@ -1100,7 +1110,8 @@ main(void)
 	 */
 	OSA_TimeDelay(1000);
 
-
+/*initialize the OLED display- tested and functions*/
+	// devSSD1331init();
 
 	while (1)
 	{
